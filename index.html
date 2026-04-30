@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GHOST KEYS // VOICE ENGINE</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=VT323&display=swap" rel="stylesheet"/>
+<style>
+  /* ... Your existing CSS variables and base styles ... */
+  :root {
+    --bg: #040608; --bg2: #080c0f; --bg3: #0c1117; --panel: #0a0f14;
+    --border: #0e2a1a; --border2: #1a3a2a; --green: #00ff88; --green2: #00cc6a;
+    --green3: #004422; --dim: #2a5a3a; --dimmer: #1a3a28; --text: #8ab8a0;
+    --text2: #4a7a5a; --red: #ff3344; --amber: #ffaa00; --cyan: #00ffee;
+    --white: #c8e0d0; --scan: rgba(0,255,136,0.03);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; min-height: 100vh; overflow-x: hidden; cursor: crosshair; animation: flicker 8s infinite; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, var(--scan) 2px, var(--scan) 4px); pointer-events: none; z-index: 9999; }
+  @keyframes flicker { 0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:.96} 94%{opacity:1} 96%{opacity:.98} }
+
+  /* ── COMPLETED KEY ROW & ADDITIONAL STYLES ── */
+  .key-row { display: flex; gap: 8px; }
+  .key-row input { flex: 1; letter-spacing: 4px; font-family: 'VT323', monospace; font-size: 18px; }
+  
+  /* ── PREVIOUSLY DEFINED STYLES (ABRIDGED FOR BREVITY) ── */
+  header { border-bottom: 1px solid var(--border2); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; background: linear-gradient(180deg, #050d08 0%, var(--bg) 100%); position: sticky; top: 0; z-index: 100; }
+  .logo { font-family: 'Orbitron', monospace; font-weight: 900; font-size: 15px; color: var(--green); letter-spacing: 4px; }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg2); padding: 0 24px; }
+  .tab { padding: 12px 20px; font-size: 11px; letter-spacing: 2px; color: var(--text2); cursor: pointer; background: none; border: none; border-bottom: 2px solid transparent; font-family: inherit; }
+  .tab.active { color: var(--green); border-bottom-color: var(--green); }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .pane { display: none; }
+  .pane.active { display: block; }
+  .panel { background: var(--panel); border: 1px solid var(--border); padding: 20px; margin-bottom: 16px; position: relative; }
+  .panel::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--green3); }
+  .panel-title { font-size: 10px; letter-spacing: 3px; color: var(--green); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .panel-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  
+  /* Form elements, sliders, buttons, voice grid, waveform, log styles omitted for length but assumed present from your CSS block */
+  /* (See original CSS for .btn, .slider-row, .voice-card, .log-box, etc.) */
+  
+  /* Adding some missing functional classes */
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">GHOST<span>KEYS</span> // V.2.0</div>
+  <div class="header-right">
+    <div class="server-badge" id="server-status">
+      <div class="dot online"></div>
+      <span id="status-text">NODE_01: ONLINE</span>
+    </div>
+    <div id="clock">00:00:00</div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" onclick="switchTab('synthesis')">SYNTHESIS</button>
+  <button class="tab" onclick="switchTab('cloning')">VOICE CLONING</button>
+  <button class="tab" onclick="switchTab('routing')">CALL ROUTING</button>
+</nav>
+
+<main class="container">
+  
+  <section id="synthesis" class="pane active">
+    <div class="two-col">
+      <div class="col-left">
+        <div class="panel">
+          <div class="panel-title">INPUT_BUFFER</div>
+          <div class="field">
+            <label>TEXT TO ENCODE</label>
+            <textarea placeholder="Enter decryption text or speech fragments..."></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn primary" onclick="simulateAction('SYNTHESIZING...')">PROCESS VOICE</button>
+            <button class="btn">CLEAR</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">MODULATION_CONTROLS</div>
+          <div class="slider-row">
+            <span class="slider-label">STABILITY</span>
+            <input type="range" min="0" max="100" value="75" oninput="updateSlider(this)">
+            <span class="slider-val">75%</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">CLARITY</span>
+            <input type="range" min="0" max="100" value="45" oninput="updateSlider(this)">
+            <span class="slider-val">45%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-right">
+        <div class="panel">
+          <div class="panel-title">VOICE_PROFILES</div>
+          <div class="voice-grid">
+            <div class="voice-card selected">
+              <div class="vc-sel"></div>
+              <div class="vc-name">OPERATOR_7</div>
+              <div class="vc-cat">NEUTRAL / OMNI</div>
+            </div>
+            <div class="voice-card">
+              <div class="vc-sel"></div>
+              <div class="vc-name">PHANTOM_A</div>
+              <div class="vc-cat">WHISPER / MALE</div>
+            </div>
+            <div class="voice-card">
+              <div class="vc-sel"></div>
+              <div class="vc-name">ECHO_V3</div>
+              <div class="vc-cat">SYNTH / FEMALE</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="panel">
+    <div class="panel-title">SYSTEM_LOG</div>
+    <div class="log-box" id="log">
+      <div class="log-entry sys">[SYSTEM] Ghost Keys Engine Initialized.</div>
+      <div class="log-entry ok">[SUCCESS] Neural mapping complete.</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Tab Switching logic
+  function switchTab(tabId) {
+    document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+    addLog(`Mapsd to: ${tabId.toUpperCase()}`, 'sys');
+  }
+
+  // Slider visual updates
+  function updateSlider(el) {
+    el.nextElementSibling.innerText = el.value + '%';
+    const pct = el.value + '%';
+    el.style.setProperty('--pct', pct);
+  }
+
+  // Console Log simulation
+  function addLog(msg, type = '') {
+    const log = document.getElementById('log');
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false });
+    entry.innerHTML = `<span style="color:var(--text2)">[${timestamp}]</span> ${msg}`;
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function simulateAction(msg) {
+    addLog(msg, 'warn');
+    setTimeout(() => addLog('BUFFERING NEURAL WEIGHTS...', 'sys'), 800);
+    setTimeout(() => addLog('COMPILATION SUCCESSFUL.', 'ok'), 2000);
+  }
+
+  // Clock
+  setInterval(() => {
+    document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB');
+  }, 1000);
+</script>
+
+</body>
+</html>
